@@ -316,19 +316,19 @@ integer for more verbosity.")
   "Compute linear interpolation of C0 and C1 in RGB space.
 FRAC controls the interpolation."
   (apply #'color-rgb-to-hex
-         (cl-mapcar (apply-partially 'dimmer-lerp frac) c0 c1)))
+         (cl-mapcar (apply-partially #'dimmer-lerp frac) c0 c1)))
 
 (defun dimmer-lerp-in-hsl (c0 c1 frac)
   "Compute linear interpolation of C0 and C1 in HSL space.
 FRAC controls the interpolation."
   ;; Implementation note: We must handle this case carefully to ensure the
   ;; hue is interpolated over the "shortest" arc around the color wheel.
-  (apply 'color-rgb-to-hex
-         (apply 'color-hsl-to-rgb
+  (apply #'color-rgb-to-hex
+         (apply #'color-hsl-to-rgb
                 (cl-destructuring-bind (h0 s0 l0)
-                    (apply 'color-rgb-to-hsl c0)
+                    (apply #'color-rgb-to-hsl c0)
                   (cl-destructuring-bind (h1 s1 l1)
-                      (apply 'color-rgb-to-hsl c1)
+                      (apply #'color-rgb-to-hsl c1)
                     (if (> (abs (- h1 h0)) 0.5)
                         ;; shortest arc "wraps around"
                         (list (mod (dimmer-lerp (- 1.0 frac) h1 (+ 1.0 h0)) 1.0)
@@ -342,12 +342,12 @@ FRAC controls the interpolation."
 (defun dimmer-lerp-in-cielab (c0 c1 frac)
   "Compute linear interpolation of C0 and C1 in CIELAB space.
 FRAC controls the interpolation."
-  (apply 'color-rgb-to-hex
+  (apply #'color-rgb-to-hex
          (cl-mapcar 'color-clamp
-                    (apply 'color-lab-to-srgb
-                           (cl-mapcar (apply-partially 'dimmer-lerp frac)
-                                      (apply 'color-srgb-to-lab c0)
-                                      (apply 'color-srgb-to-lab c1))))))
+                    (apply #'color-lab-to-srgb
+                           (cl-mapcar (apply-partially #'dimmer-lerp frac)
+                                      (apply #'color-srgb-to-lab c0)
+                                      (apply #'color-srgb-to-lab c1))))))
 
 (defun dimmer-compute-rgb (c0 c1 frac colorspace)
   "Compute a \"dimmed\" color via linear interpolation.
@@ -368,7 +368,7 @@ with a symbol, :rgb, :hsl, or :cielab."
     (:cielab (dimmer-lerp-in-cielab c0 c1 frac))
     (_       (dimmer-lerp-in-cielab c0 c1 frac))))
 
-(defun dimmer-cached-compute-rgb (c0 c1 frac colorspace)
+(defun dimmer-cached-compute-rgb (c0 c1 frac _)
   "Lookup a \"dimmed\" color value from cache, else compute a value.
 This is essentially a memoization of `dimmer-compute-rgb` via a hash
 using the arguments C0, C1, FRAC, and COLORSPACE as the key."
@@ -473,7 +473,7 @@ FRAC controls the dimming as defined in ‘dimmer-face-color’."
     (dimmer--dbg 2 "dimmer-buffer-face-remaps: %s"
                  (alist-get 'default dimmer-buffer-face-remaps))
     (when dimmer-buffer-face-remaps
-      (mapc 'face-remap-remove-relative dimmer-buffer-face-remaps)
+      (mapc #'face-remap-remove-relative dimmer-buffer-face-remaps)
       (setq dimmer-buffer-face-remaps nil))
     (dimmer--dbg 2 "dimmer-buffer-face-remaps: %s"
                  (alist-get 'default dimmer-buffer-face-remaps))
@@ -544,7 +544,7 @@ excluded due to the predicates before should be un-dimmed now."
 (defun dimmer-restore-all ()
   "Un-dim all buffers."
   (dimmer--dbg-buffers 1 "dimmer-restore-all")
-  (mapc 'dimmer-restore-buffer (buffer-list)))
+  (mapc #'dimmer-restore-buffer (buffer-list)))
 
 (defun dimmer-command-handler ()
   "Process all buffers if current buffer has changed."
@@ -621,21 +621,21 @@ when `dimmer-watch-frame-focus-events` is nil."
 ;;; debugging - call from *scratch*, ielm, or eshell
 
 (defun dimmer--debug-face-remapping-alist (name &optional clear)
-  "Display 'face-remapping-alist' for buffer NAME (or clear if CLEAR)."
+  "Display `face-remapping-alist' for buffer NAME (or clear if CLEAR)."
   (with-current-buffer name
     (if clear
         (setq face-remapping-alist nil)
       face-remapping-alist)))
 
 (defun dimmer--debug-buffer-face-remaps (name &optional clear)
-  "Display 'dimmer-buffer-face-remaps' for buffer NAME (or clear if CLEAR)."
+  "Display `dimmer-buffer-face-remaps' for buffer NAME (or clear if CLEAR)."
   (with-current-buffer name
     (if clear
         (setq dimmer-buffer-face-remaps nil)
       dimmer-buffer-face-remaps)))
 
 (defun dimmer--debug-reset (name)
-  "Clear 'face-remapping-alist' and 'dimmer-buffer-face-remaps' for NAME."
+  "Clear `face-remapping-alist' and `dimmer-buffer-face-remaps' for NAME."
   (dimmer--debug-face-remapping-alist name t)
   (dimmer--debug-buffer-face-remaps name t)
   (redraw-display))
@@ -656,7 +656,7 @@ when `dimmer-watch-frame-focus-events` is nil."
                    (format "wb '%s' **" wb)
                  "")))))
 
-(provide 'dimmer)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(provide 'dimmer)
 ;;; dimmer.el ends here

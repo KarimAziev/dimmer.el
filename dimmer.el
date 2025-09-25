@@ -315,7 +315,7 @@ integer for more verbosity.")
 (defun dimmer-lerp-in-rgb (c0 c1 frac)
   "Compute linear interpolation of C0 and C1 in RGB space.
 FRAC controls the interpolation."
-  (apply 'color-rgb-to-hex
+  (apply #'color-rgb-to-hex
          (cl-mapcar (apply-partially 'dimmer-lerp frac) c0 c1)))
 
 (defun dimmer-lerp-in-hsl (c0 c1 frac)
@@ -382,6 +382,20 @@ using the arguments C0, C1, FRAC, and COLORSPACE as the key."
             (puthash key rgb dimmer-dimmed-faces)
             rgb)))))
 
+(defun dimmer-color-defined-p (color &optional frame)
+  "Return non-nil if COLOR is supported on frame FRAME.
+COLOR should be a string naming a color (e.g. \"white\"), or a
+string specifying a color's RGB components (e.g. \"#ff12ec\"), or
+the symbol `unspecified'.
+
+This function returns nil if COLOR is the symbol `unspecified',
+or one of the strings \"unspecified-fg\" or \"unspecified-bg\".
+
+If FRAME is omitted or nil, use the selected frame."
+  (let ((result (ignore-errors
+                  (color-defined-p color frame))))
+    result))
+
 (defun dimmer-face-color (f frac)
   "Compute a dimmed version of the foreground color of face F.
 If `dimmer-adjust-background-color` is true, adjust the
@@ -406,8 +420,8 @@ suitable for use with `face-remap-add-relative`."
     ;;     background component of F toward the `default` foreground.`
     (when (and (or (eq dimmer-adjustment-mode :foreground)
                    (eq dimmer-adjustment-mode :both))
-               fg (color-defined-p fg)
-               def-bg (color-defined-p def-bg))
+               fg (dimmer-color-defined-p fg)
+               def-bg (dimmer-color-defined-p def-bg))
       (setq result
             (plist-put result :foreground
                        (dimmer-cached-compute-rgb fg
@@ -416,8 +430,8 @@ suitable for use with `face-remap-add-relative`."
                                                   dimmer-use-colorspace))))
     (when (and (or (eq dimmer-adjustment-mode :background)
                    (eq dimmer-adjustment-mode :both))
-               bg (color-defined-p bg)
-               def-fg (color-defined-p def-fg))
+               bg (dimmer-color-defined-p bg)
+               def-fg (dimmer-color-defined-p def-fg))
       (setq result
             (plist-put result :background
                        (dimmer-cached-compute-rgb bg
